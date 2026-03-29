@@ -1,179 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Chat App</title>
-
-  <style>
-    body {
-      font-family: Arial;
-      background: #0f172a;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      color: white;
-    }
-
-    .chat-container {
-      width: 350px;
-      height: 500px;
-      background: #1e293b;
-      border-radius: 20px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-
-    .header {
-      padding: 10px;
-      text-align: center;
-      background: #334155;
-    }
-
-    .username {
-      margin-top: 5px;
-      padding: 6px;
-      width: 60%;
-      border-radius: 10px;
-      border: none;
-      text-align: center;
-      background: #0f172a;
-      color: white;
-    }
-
-    .messages {
-      flex: 1;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .message {
-      padding: 8px 12px;
-      border-radius: 15px;
-      margin: 5px 0;
-      max-width: 75%;
-    }
-
-    .left {
-      background: #475569;
-      align-self: flex-start;
-    }
-
-    .right {
-      background: #38bdf8;
-      color: black;
-      align-self: flex-end;
-    }
-
-    .input-area {
-      display: flex;
-      padding: 10px;
-      background: #334155;
-    }
-
-    #messageInput {
-      flex: 1;
-      padding: 10px;
-      border-radius: 15px;
-      border: none;
-      outline: none;
-      background: #1e293b;
-      color: white;
-    }
-
-    button {
-      margin-left: 8px;
-      padding: 10px 15px;
-      border-radius: 15px;
-      border: none;
-      background: #38bdf8;
-      cursor: pointer;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Friend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f1f1f1;
+        }
+        .chat-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #messages {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #messageInput {
+            width: calc(100% - 60px);
+            padding: 10px;
+        }
+        button {
+            padding: 10px;
+        }
+    </style>
 </head>
-
 <body>
+    <div class="chat-container">
+        <h1>Chat with Friend</h1>
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 
-<div class="chat-container">
-  <div class="header">
-    💬 Chat<br>
-    <input id="username" class="username" placeholder="Your name">
-  </div>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script>
+        // 🔑 Replace with your Firebase config
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
 
-  <div id="messages" class="messages"></div>
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-  <div class="input-area">
-    <input id="messageInput" placeholder="Type message...">
-    <button onclick="sendMessage()">Send</button>
-  </div>
-</div>
+        // Send message
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if(message){
+                db.collection('messages').add({
+                    text: message,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                input.value = '';
+            }
+        }
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBb3zt9jrgr4cfW7AWrmvCAK_-wFVKfUt0",
-    authDomain: "chat-dfa60.firebaseapp.com",
-    projectId: "chat-dfa60",
-    storageBucket: "chat-dfa60.firebasestorage.app",
-    messagingSenderId: "977336784686",
-    appId: "1:977336784686:web:272470c3f863d9b1f60cbf"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const messagesRef = collection(db, "messages");
-
-  window.sendMessage = async function () {
-    const user = document.getElementById("username").value.trim();
-    const text = document.getElementById("messageInput").value.trim();
-
-    if (!user) {
-      alert("Enter your name");
-      return;
-    }
-
-    if (!text) return;
-
-    await addDoc(messagesRef, {
-      user: user,
-      text: text,
-      time: Date.now()
-    });
-
-    document.getElementById("messageInput").value = "";
-  };
-
-  const q = query(messagesRef, orderBy("time"));
-
-  onSnapshot(q, (snapshot) => {
-    const container = document.getElementById("messages");
-    container.innerHTML = "";
-
-    const currentUser = document.getElementById("username").value;
-
-    snapshot.forEach(doc => {
-      const msg = doc.data();
-
-      const div = document.createElement("div");
-      div.className = "message " + (msg.user === currentUser ? "right" : "left");
-
-      div.textContent = msg.user === currentUser
-        ? msg.text
-        : msg.user + ": " + msg.text;
-
-      container.appendChild(div);
-    });
-
-    container.scrollTop = container.scrollHeight;
-  });
-</script>
-
+        // Real-time messages
+        db.collection('messages').orderBy('timestamp').onSnapshot(snapshot => {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+            snapshot.forEach(doc => {
+                const msg = document.createElement('div');
+                msg.textContent = doc.data().text;
+                messagesDiv.appendChild(msg);
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // auto-scroll
+        });
+    </script>
 </body>
 </html>
